@@ -8,27 +8,25 @@ $ModulePath = $PSScriptRoot
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $moduleLoadingErrors = 0
 
-# First ensure private directory exists
-if (-not (Test-Path -Path "$ModulePath\Private" -PathType Container)) {
-    Write-Warning "Private module directory not found. Creating directory structure."
+# Function to handle directory creation with error handling
+function Create-Directory {
+    param (
+        [string]$Path
+    )
     try {
-        $null = New-Item -Path "$ModulePath\Private" -ItemType Directory -Force
+        if (-not (Test-Path -Path $Path -PathType Container)) {
+            Write-Warning "$Path directory not found. Creating directory structure."
+            $null = New-Item -Path $Path -ItemType Directory -Force
+        }
     }
     catch {
-        Write-Error "Failed to create Private directory: $_"
+        Write-Error "Failed to create $Path directory: $_"
     }
 }
 
-# Ensure public directory exists
-if (-not (Test-Path -Path "$ModulePath\Public" -PathType Container)) {
-    Write-Warning "Public module directory not found. Creating directory structure."
-    try {
-        $null = New-Item -Path "$ModulePath\Public" -ItemType Directory -Force
-    }
-    catch {
-        Write-Error "Failed to create Public directory: $_"
-    }
-}
+# Create necessary directories
+Create-Directory -Path "$ModulePath\Private"
+Create-Directory -Path "$ModulePath\Public"
 
 # Import Private/Helper Functions (not exported to module users)
 $privatePath = "$ModulePath\Private"
@@ -114,7 +112,16 @@ else {
     Write-Warning "Invoke-IPv6Calc function not found, alias 'ipc6' not created."
 }
 
+# Function to report module loading performance
+function Report-ModuleLoadingPerformance {
+    param (
+        [int]$LoadTime,
+        [int]$Errors
+    )
+    Write-Verbose "NetKit module loaded in $LoadTime ms with $Errors errors"
+}
+
 # Report module loading performance
 $stopwatch.Stop()
 $loadTime = $stopwatch.ElapsedMilliseconds
-Write-Verbose "NetKit module loaded in $loadTime ms with $moduleLoadingErrors errors"
+Report-ModuleLoadingPerformance -LoadTime $loadTime -Errors $moduleLoadingErrors

@@ -30,10 +30,8 @@ function Test-IPv4Address {
     )
     
     try {
-        if ($IP -match '^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$') {
-            $octets = @([int]$matches[1], [int]$matches[2], [int]$matches[3], [int]$matches[4])
-            # Fix the logic here - should check that values are within valid range
-            return -not ($octets.Where({ $_ -lt 0 -or $_ -gt 255 }, 'First').Count -gt 0)
+        if ($IP -match '^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$') {
+            return $true
         }
         return $false
     }
@@ -52,7 +50,6 @@ function ConvertTo-IPv4Decimal {
     )
     
     try {
-        # More efficient regex with capture validation
         if ($IP -match '^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$') {
             $o1, $o2, $o3, $o4 = [int]$matches[1], [int]$matches[2], [int]$matches[3], [int]$matches[4]
             if ($o1 -le 255 -and $o2 -le 255 -and $o3 -le 255 -and $o4 -le 255) {
@@ -67,6 +64,7 @@ function ConvertTo-IPv4Decimal {
         return $null
     }
 }
+
 function ConvertTo-IPv4DottedDecimal {
     [CmdletBinding()]
     [OutputType([string])]
@@ -83,7 +81,7 @@ function ConvertTo-IPv4DottedDecimal {
     }
     catch {
         Write-Verbose "Failed to convert decimal to IP: $_"
-        return $null  # Return null instead of "Error" for consistency
+        return $null
     }
 }
 
@@ -92,7 +90,7 @@ function ConvertTo-IPv4SubnetMask {
     [OutputType([string])]
     param (
         [Parameter(Mandatory = $true)]
-        [ValidateRange(0, 32)]  # Use attribute instead of manual validation
+        [ValidateRange(0, 32)]
         [int]$PrefixLength
     )
     
@@ -138,29 +136,14 @@ function Test-IPv4SubnetMask {
         [string]$IP
     )
     
-    begin {
-        # Initialize if needed
-    }
-    
-    process {
-        # Function logic here
-    }
-    
-    end {
-        # Finalization if needed
-    }
-    
     try {
-        # Validate basic IP format first
         if (-not (Test-IPv4Address -IP $SubnetMask)) {
             return $false
         }
         
-        # Convert to decimal and binary to check for proper subnet mask pattern
         $decimalMask = ConvertTo-IPv4Decimal $SubnetMask
         $binary = [Convert]::ToString($decimalMask, 2).PadLeft(32, '0')
         
-        # Valid subnet masks have continuous 1s followed by continuous 0s
         return -not ($binary -match '01')
     }
     catch {
@@ -196,10 +179,8 @@ function Get-IPv4NetworkInfo {
         $broadcastAddress = ConvertTo-IPv4DottedDecimal $broadcastDecimal
         $wildcardMask = ConvertTo-IPv4DottedDecimal $wildcardDecimal
         
-        # Calculate network size (number of hosts)
         $networkSize = $broadcastDecimal - $networkDecimal + 1
         
-        # Build output object
         $output = [PSCustomObject]@{
             IPAddress     = $IPAddress
             Mask          = $SubnetMask
@@ -211,7 +192,6 @@ function Get-IPv4NetworkInfo {
             TotalHosts    = $networkSize
         }
         
-        # Add UsableRange if requested
         if ($IncludeUsableRange) {
             if ($cidr -eq 32) {
                 $usableRangeValue = "$networkAddress"
