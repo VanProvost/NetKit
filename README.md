@@ -2,7 +2,7 @@
 
 ## Overview
 
-NetKit is a comprehensive toolkit for network calculations, including IPv4 and IPv6 subnet calculations, basic subnetting, and VLSM subnetting. It provides a set of PowerShell functions to help network administrators and engineers perform various network-related tasks efficiently.
+NetKit is a comprehensive toolkit for network calculations, including IPv4 and IPv6 subnet calculations, basic subnetting, and VLSM subnetting. It provides a set of PowerShell functions to help network administrators and engineers perform various network-related tasks.
 
 ## Features
 
