@@ -30,10 +30,7 @@ function Test-IPv4Address {
     )
     
     try {
-        if ($IP -match '^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$') {
-            return $true
-        }
-        return $false
+        [System.Net.IPAddress]::TryParse($IP, [ref]$null)
     }
     catch {
         Write-Verbose "Error validating IPv4 address: $_"
@@ -50,14 +47,8 @@ function ConvertTo-IPv4Decimal {
     )
     
     try {
-        if ($IP -match '^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$') {
-            $o1, $o2, $o3, $o4 = [int]$matches[1], [int]$matches[2], [int]$matches[3], [int]$matches[4]
-            if ($o1 -le 255 -and $o2 -le 255 -and $o3 -le 255 -and $o4 -le 255) {
-                return [long]($o1 * 16777216 + $o2 * 65536 + $o3 * 256 + $o4)
-            }
-        }
-        Write-Verbose "Invalid IP format: $IP"
-        return $null
+        $ipAddress = [System.Net.IPAddress]::Parse($IP)
+        [BitConverter]::ToUInt32($ipAddress.GetAddressBytes(), 0)
     }
     catch {
         Write-Verbose "Failed to convert IP to decimal: $_"
@@ -74,10 +65,7 @@ function ConvertTo-IPv4DottedDecimal {
     )
     
     try {
-        $octet1 = ($IPDecimal -band 0xFF000000) -shr 24
-        if ($octet1 -lt 0) { $octet1 += 256 }
-        
-        return "$octet1.$(($IPDecimal -band 0x00FF0000) -shr 16).$(($IPDecimal -band 0x0000FF00) -shr 8).$($IPDecimal -band 0x000000FF)"
+        [System.Net.IPAddress]::new([BitConverter]::GetBytes($IPDecimal)).ToString()
     }
     catch {
         Write-Verbose "Failed to convert decimal to IP: $_"
